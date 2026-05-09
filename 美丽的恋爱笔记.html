@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>💌 美丽的恋爱日记</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root { --pink:#ff6b9d; --soft:#fff0f5; --card:#fff; --text:#333; --sub:#999; --border:#f0e0e8; }
+  body { font-family:-apple-system,'PingFang SC',sans-serif; background:#fdf6f9; color:var(--text); min-height:100vh; padding-bottom:80px; }
+
+  /* Header */
+  .header { background:linear-gradient(135deg,#ff6b9d,#ff9dc4); padding:28px 20px 20px; text-align:center; }
+  .header h1 { color:#fff; font-size:22px; font-weight:700; letter-spacing:2px; }
+  .header p { color:rgba(255,255,255,0.8); font-size:12px; margin-top:4px; }
+
+  /* Tabs */
+  .tabs { display:flex; background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:10; }
+  .tab { flex:1; padding:12px; text-align:center; font-size:14px; color:var(--sub); cursor:pointer; border-bottom:2px solid transparent; }
+  .tab.active { color:var(--pink); border-bottom-color:var(--pink); font-weight:600; }
+
+  /* Pages */
+  .page { display:none; padding:16px; }
+  .page.active { display:block; }
+
+  /* Cards */
+  .card { background:var(--card); border-radius:16px; padding:16px; margin-bottom:12px; box-shadow:0 2px 12px rgba(255,107,157,0.08); border:1px solid var(--border); }
+
+  /* Boy list */
+  .boy-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+  .boy-item:last-child { border-bottom:none; }
+  .avatar { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#ff6b9d,#ffb3d1); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .boy-info { flex:1; }
+  .boy-name { font-size:15px; font-weight:600; }
+  .boy-meta { font-size:12px; color:var(--sub); margin-top:2px; }
+  .boy-dates { font-size:12px; color:var(--pink); margin-top:2px; }
+  .fire { font-size:13px; }
+
+  /* Diary entries */
+  .entry { background:var(--card); border-radius:16px; padding:16px; margin-bottom:12px; border-left:3px solid var(--pink); box-shadow:0 2px 12px rgba(255,107,157,0.08); }
+  .entry-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .entry-boy { font-size:13px; font-weight:600; color:var(--pink); }
+  .entry-date { font-size:11px; color:var(--sub); }
+  .entry-mood { font-size:20px; margin-bottom:6px; }
+  .entry-text { font-size:14px; line-height:1.8; color:#444; white-space:pre-wrap; }
+  .entry-place { font-size:12px; color:var(--sub); margin-top:8px; }
+
+  /* Form */
+  .form-group { margin-bottom:14px; }
+  label { font-size:12px; color:var(--sub); display:block; margin-bottom:6px; letter-spacing:1px; }
+  input, textarea, select { width:100%; padding:12px; border:1px solid var(--border); border-radius:10px; font-size:14px; font-family:inherit; background:#fdf6f9; color:var(--text); outline:none; }
+  input:focus, textarea:focus, select:focus { border-color:var(--pink); }
+  textarea { resize:none; min-height:100px; line-height:1.7; }
+  .mood-row { display:flex; gap:8px; flex-wrap:wrap; }
+  .mood-opt { padding:6px 12px; border-radius:20px; border:1px solid var(--border); font-size:16px; cursor:pointer; background:#fff; }
+  .mood-opt.selected { background:var(--soft); border-color:var(--pink); }
+  .fire-row { display:flex; gap:6px; }
+  .fire-btn { font-size:22px; cursor:pointer; opacity:0.3; transition:opacity .15s; }
+  .fire-btn.on { opacity:1; }
+  .submit-btn { width:100%; padding:14px; background:linear-gradient(135deg,#ff6b9d,#ff9dc4); color:#fff; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; margin-top:4px; }
+  .submit-btn:active { opacity:0.85; }
+
+  /* FAB */
+  .fab { position:fixed; bottom:24px; right:24px; width:52px; height:52px; background:linear-gradient(135deg,#ff6b9d,#ff9dc4); border-radius:50%; border:none; color:#fff; font-size:26px; cursor:pointer; box-shadow:0 4px 16px rgba(255,107,157,0.4); display:flex; align-items:center; justify-content:center; z-index:100; }
+
+  /* Modal */
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:200; }
+  .modal-bg.open { display:flex; align-items:flex-end; }
+  .modal { background:#fff; border-radius:24px 24px 0 0; padding:24px 20px 40px; width:100%; max-height:90vh; overflow-y:auto; }
+  .modal-title { font-size:16px; font-weight:700; margin-bottom:20px; text-align:center; color:var(--pink); }
+  .modal-close { position:absolute; right:20px; top:20px; font-size:22px; cursor:pointer; color:var(--sub); }
+
+  /* Boy detail */
+  .boy-detail-header { text-align:center; padding:16px 0 8px; }
+  .big-avatar { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#ff6b9d,#ffb3d1); display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 8px; }
+  .section-label { font-size:11px; color:var(--sub); letter-spacing:2px; margin:16px 0 8px; }
+
+  .empty { text-align:center; padding:40px 20px; color:var(--sub); font-size:14px; }
+  .empty-icon { font-size:40px; margin-bottom:12px; }
+
+  .delete-btn { float:right; font-size:12px; color:#ccc; cursor:pointer; padding:2px 6px; }
+  .delete-btn:hover { color:#ff6b9d; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💌 美丽的恋爱日记</h1>
+  <p id="headerSub">记录每一段心动的瞬间</p>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('diary')">📖 日记</div>
+  <div class="tab" onclick="switchTab('boys')">👦 他们</div>
+  <div class="tab" onclick="switchTab('add')">✍️ 写日记</div>
+</div>
+
+<!-- 日记页 -->
+<div class="page active" id="page-diary">
+  <div id="entryList"></div>
+</div>
+
+<!-- 男生页 -->
+<div class="page" id="page-boys">
+  <div id="boyList"></div>
+</div>
+
+<!-- 写日记页 -->
+<div class="page" id="page-add">
+  <div class="card">
+    <div class="form-group">
+      <label>他是谁</label>
+      <select id="f-boy">
+        <option value="">选择 / 新建</option>
+      </select>
+    </div>
+    <div class="form-group" id="newBoyGroup" style="display:none">
+      <label>新男生备注名</label>
+      <input id="f-newboy" placeholder="比如：咖啡馆男生、高个子A..." maxlength="20">
+    </div>
+    <div class="form-group" id="fireGroup" style="display:none">
+      <label>颜值 🔥</label>
+      <div class="fire-row" id="fireRow">
+        <span class="fire-btn" data-v="1" onclick="setFire(1)">🔥</span>
+        <span class="fire-btn" data-v="2" onclick="setFire(2)">🔥</span>
+        <span class="fire-btn" data-v="3" onclick="setFire(3)">🔥</span>
+        <span class="fire-btn" data-v="4" onclick="setFire(4)">🔥</span>
+        <span class="fire-btn" data-v="5" onclick="setFire(5)">🔥</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>约会日期</label>
+      <input type="date" id="f-date">
+    </div>
+    <div class="form-group">
+      <label>去了哪里</label>
+      <input id="f-place" placeholder="咖啡厅、电影院、公园..." maxlength="30">
+    </div>
+    <div class="form-group">
+      <label>今天的心情</label>
+      <div class="mood-row" id="moodRow">
+        <span class="mood-opt" onclick="setMood('🥰')">🥰</span>
+        <span class="mood-opt" onclick="setMood('😊')">😊</span>
+        <span class="mood-opt" onclick="setMood('🤔')">🤔</span>
+        <span class="mood-opt" onclick="setMood('😐')">😐</span>
+        <span class="mood-opt" onclick="setMood('😅')">😅</span>
+        <span class="mood-opt" onclick="setMood('💔')">💔</span>
+        <span class="mood-opt" onclick="setMood('🔥')">🔥</span>
+        <span class="mood-opt" onclick="setMood('✨')">✨</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>写下心情</label>
+      <textarea id="f-text" placeholder="今天他说了什么让我心动的话...&#10;约会的细节...&#10;还想再见吗..."></textarea>
+    </div>
+    <button class="submit-btn" onclick="saveEntry()">保存这一页 💾</button>
+  </div>
+</div>
+
+<!-- 男生详情 modal -->
+<div class="modal-bg" id="boyModal">
+  <div class="modal" style="position:relative">
+    <span class="modal-close" onclick="closeModal()">✕</span>
+    <div id="boyModalContent"></div>
+  </div>
+</div>
+
+<script>
+// ── 数据层（localStorage）──
+const KEY_ENTRIES = 'ld_entries';
+const KEY_BOYS = 'ld_boys';
+
+function load(k) { try { return JSON.parse(localStorage.getItem(k)) || []; } catch(e) { return []; } }
+function save(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
+
+let entries = load(KEY_ENTRIES);
+let boys = load(KEY_BOYS);
+
+// ── 状态 ──
+let curMood = '';
+let curFire = 0;
+
+// ── Tab ──
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['diary','boys','add'][i] === t));
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + t).classList.add('active');
+  if (t === 'diary') renderEntries();
+  if (t === 'boys') renderBoys();
+  if (t === 'add') initForm();
+}
+
+// ── Mood & Fire ──
+function setMood(m) {
+  curMood = m;
+  document.querySelectorAll('.mood-opt').forEach(el => el.classList.toggle('selected', el.innerText === m));
+}
+function setFire(v) {
+  curFire = v;
+  document.querySelectorAll('.fire-btn').forEach(el => el.classList.toggle('on', +el.dataset.v <= v));
+}
+
+// ── Form init ──
+function initForm() {
+  const sel = document.getElementById('f-boy');
+  sel.innerHTML = '<option value="">+ 新男生</option>';
+  boys.forEach(b => {
+    const o = document.createElement('option');
+    o.value = b.id; o.textContent = b.name + ' ' + '🔥'.repeat(b.fire || 0);
+    sel.appendChild(o);
+  });
+  sel.onchange = () => {
+    const isNew = sel.value === '';
+    document.getElementById('newBoyGroup').style.display = isNew ? 'block' : 'none';
+    document.getElementById('fireGroup').style.display = isNew ? 'block' : 'none';
+  };
+  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('f-text').value = '';
+  document.getElementById('f-place').value = '';
+  document.getElementById('f-newboy').value = '';
+  curMood = ''; curFire = 0;
+  document.querySelectorAll('.mood-opt').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.fire-btn').forEach(el => el.classList.remove('on'));
+  document.getElementById('newBoyGroup').style.display = 'block';
+  document.getElementById('fireGroup').style.display = 'block';
+}
+
+// ── Save ──
+function saveEntry() {
+  const boySel = document.getElementById('f-boy').value;
+  const text = document.getElementById('f-text').value.trim();
+  const date = document.getElementById('f-date').value;
+  if (!text) { alert('写点什么吧～'); return; }
+  if (!date) { alert('日期没填'); return; }
+
+  let boyId = boySel;
+  if (!boyId) {
+    const name = document.getElementById('f-newboy').value.trim() || '神秘男生';
+    const boy = { id: Date.now().toString(), name, fire: curFire, emoji: randomEmoji() };
+    boys.push(boy);
+    save(KEY_BOYS, boys);
+    boyId = boy.id;
+  }
+
+  const entry = {
+    id: Date.now().toString(),
+    boyId,
+    date,
+    place: document.getElementById('f-place').value.trim(),
+    mood: curMood || '💭',
+    text
+  };
+  entries.unshift(entry);
+  save(KEY_ENTRIES, entries);
+  alert('保存成功 💌');
+  switchTab('diary');
+}
+
+function randomEmoji() {
+  const e = ['🌸','🌟','💫','🎯','☁️','🌈','🍀','🎸','🦋','🌙'];
+  return e[Math.floor(Math.random()*e.length)];
+}
+
+// ── Render entries ──
+function renderEntries() {
+  const el = document.getElementById('entryList');
+  if (!entries.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📖</div>还没有日记<br>去写第一篇吧～</div>';
+    return;
+  }
+  el.innerHTML = entries.map(e => {
+    const boy = boys.find(b => b.id === e.boyId);
+    const bname = boy ? boy.name : '神秘男生';
+    return `<div class="entry">
+      <div class="entry-header">
+        <span class="entry-boy">${bname} ${boy ? '🔥'.repeat(boy.fire||0) : ''}</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span class="entry-date">${e.date}</span>
+          <span class="delete-btn" onclick="deleteEntry('${e.id}')">删除</span>
+        </span>
+      </div>
+      <div class="entry-mood">${e.mood}</div>
+      ${e.place ? `<div class="entry-place">📍 ${e.place}</div>` : ''}
+      <div class="entry-text" style="margin-top:8px">${e.text}</div>
+    </div>`;
+  }).join('');
+}
+
+function deleteEntry(id) {
+  if (!confirm('确定删除这篇日记？')) return;
+  entries = entries.filter(e => e.id !== id);
+  save(KEY_ENTRIES, entries);
+  renderEntries();
+}
+
+// ── Render boys ──
+function renderBoys() {
+  const el = document.getElementById('boyList');
+  if (!boys.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">👦</div>还没有记录任何人<br>写日记时会自动添加～</div>';
+    return;
+  }
+  el.innerHTML = boys.map(b => {
+    const cnt = entries.filter(e => e.boyId === b.id).length;
+    return `<div class="card boy-item" onclick="openBoy('${b.id}')">
+      <div class="avatar">${b.emoji || '🌸'}</div>
+      <div class="boy-info">
+        <div class="boy-name">${b.name}</div>
+        <div class="boy-meta">${'🔥'.repeat(b.fire||0) || '暂无评分'}</div>
+        <div class="boy-dates">共 ${cnt} 次约会记录</div>
+      </div>
+      <span style="color:#ddd;font-size:18px">›</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Boy detail modal ──
+function openBoy(id) {
+  const boy = boys.find(b => b.id === id);
+  if (!boy) return;
+  const myEntries = entries.filter(e => e.boyId === id).sort((a,b) => b.date.localeCompare(a.date));
+  const content = `
+    <div class="boy-detail-header">
+      <div class="big-avatar">${boy.emoji || '🌸'}</div>
+      <div style="font-size:18px;font-weight:700">${boy.name}</div>
+      <div style="font-size:16px;margin-top:4px">${'🔥'.repeat(boy.fire||0) || '暂无评分'}</div>
+      <div style="font-size:12px;color:var(--sub);margin-top:4px">共约会 ${myEntries.length} 次</div>
+    </div>
+    <div class="section-label">约会记录</div>
+    ${myEntries.length ? myEntries.map(e => `
+      <div class="entry" style="margin-bottom:10px">
+        <div class="entry-header">
+          <span class="entry-mood">${e.mood}</span>
+          <span class="entry-date">${e.date}</span>
+        </div>
+        ${e.place ? `<div class="entry-place">📍 ${e.place}</div>` : ''}
+        <div class="entry-text" style="margin-top:6px">${e.text}</div>
+      </div>`).join('') : '<div class="empty" style="padding:20px">还没有记录</div>'}
+    <button class="submit-btn" style="background:#ffe0ea;color:#ff6b9d;margin-top:8px" onclick="deleteBoy('${id}')">删除这个人</button>
+  `;
+  document.getElementById('boyModalContent').innerHTML = content;
+  document.getElementById('boyModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('boyModal').classList.remove('open'); }
+
+function deleteBoy(id) {
+  if (!confirm('删除后该男生的所有日记也会一起删除，确定吗？')) return;
+  boys = boys.filter(b => b.id !== id);
+  entries = entries.filter(e => e.boyId !== id);
+  save(KEY_BOYS, boys);
+  save(KEY_ENTRIES, entries);
+  closeModal();
+  renderBoys();
+}
+
+// ── 统计 header ──
+function updateHeader() {
+  const total = entries.length;
+  const boyCount = boys.length;
+  document.getElementById('headerSub').textContent = boyCount ? `${boyCount} 个他 · ${total} 篇日记` : '记录每一段心动的瞬间';
+}
+
+// ── Init ──
+renderEntries();
+updateHeader();
+</script>
+</body>
+</html>
